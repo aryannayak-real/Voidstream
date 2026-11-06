@@ -64,8 +64,6 @@
     </queries>
 
     <application
-        <activity android:name="com.voidstream.app.discord.DiscordLoginActivity" android:exported="false" android:theme="@style/Theme.Flow" />
-        <receiver android:name="com.voidstream.app.updater.UpdateInstallReceiver" android:exported="false" />
         android:name=".FlowApplication"
         android:allowBackup="true"
         android:backupAgent=".data.backup.FlowBackupAgent"
@@ -82,6 +80,8 @@
         android:resizeableActivity="true"
         android:requestLegacyExternalStorage="true"
         android:enableOnBackInvokedCallback="true">
+        <activity android:name="com.voidstream.app.discord.DiscordLoginActivity" android:exported="false" android:theme="@style/Theme.Flow" />
+        <receiver android:name="com.voidstream.app.updater.UpdateInstallReceiver" android:exported="false" />
 
         <!--
             Samsung keep-alive hints (same as NewPipe).
