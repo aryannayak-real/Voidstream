@@ -30326,7 +30326,6 @@ SPLio/github/aedev/flow/data/update/UpdateRepository;-><clinit>()V
 SPLio/github/aedev/flow/data/update/UpdateRepository;-><init>(Lokhttp3/OkHttpClient;Lio/github/aedev/flow/data/local/LocalDataManager;)V
 PLio/github/aedev/flow/data/update/UpdateRepository;->access$fetchLocked(Lio/github/aedev/flow/data/update/UpdateRepository;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 PLio/github/aedev/flow/data/update/UpdateRepository;->access$getClient$p(Lio/github/aedev/flow/data/update/UpdateRepository;)Lokhttp3/OkHttpClient;
-PLio/github/aedev/flow/data/update/UpdateRepository;->access$isNightly$p(Lio/github/aedev/flow/data/update/UpdateRepository;)Z
 PLio/github/aedev/flow/data/update/UpdateRepository;->fetchLocked(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 SPLio/github/aedev/flow/data/update/UpdateRepository;->releaseToAnnounce$default(Lio/github/aedev/flow/data/update/UpdateRepository;Lio/github/aedev/flow/data/update/UpdateAnnouncement;JLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 SPLio/github/aedev/flow/data/update/UpdateRepository;->releaseToAnnounce(Lio/github/aedev/flow/data/update/UpdateAnnouncement;JLkotlin/coroutines/Continuation;)Ljava/lang/Object;

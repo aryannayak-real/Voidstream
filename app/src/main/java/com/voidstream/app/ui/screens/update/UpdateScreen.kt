@@ -172,7 +172,7 @@ private fun ReleaseHeader(release: AppRelease) {
                 Icons.Outlined.SyncAlt,
                 stringResource(
                     R.string.update_version_change,
-                    AppVersions.installedLabel(BuildConfig.VERSION_NAME, BuildConfig.NIGHTLY_RUN),
+                    AppVersions.installedLabel(BuildConfig.VERSION_NAME),
                     release.version,
                 ),
             )

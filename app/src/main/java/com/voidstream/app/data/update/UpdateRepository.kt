@@ -20,8 +20,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val STABLE_RELEASE_API = "https://api.github.com/repos/aryannayak-real/Voidstream/releases/latest"
-private const val NIGHTLY_RELEASE_API = "https://api.github.com/repos/aryannayak-real/Voidstream/releases/tags/nightly"
-private const val NIGHTLY_CHANNEL = "nightly"
 private const val GITHUB_JSON = "application/vnd.github+json"
 
 /** Where an automatic check may surface a release; each announces a version once. */
@@ -44,7 +42,7 @@ internal object UpdateSchedule {
 }
 
 /**
- * The one place Flow asks GitHub about releases. The launch check, the background worker and the
+ * The one place VoidStream asks GitHub about releases. The launch check, the background worker and the
  * Settings button all come through here, so a cold start never fetches twice and a skipped version
  * stays skipped everywhere.
  */
@@ -56,8 +54,7 @@ class UpdateRepository
         private val dataManager: LocalDataManager,
     ) {
         private val mutex = Mutex()
-        private val isNightly = BuildConfig.UPDATE_CHANNEL == NIGHTLY_CHANNEL
-        private val _latest = MutableStateFlow<AppRelease?>(null)
+            private val _latest = MutableStateFlow<AppRelease?>(null)
 
         /** The newest release found this process, or null when none is known or this build is current. */
         val latest: StateFlow<AppRelease?> = _latest.asStateFlow()
@@ -99,7 +96,7 @@ class UpdateRepository
                     val request =
                         Request
                             .Builder()
-                            .url(if (isNightly) NIGHTLY_RELEASE_API else STABLE_RELEASE_API)
+                            .url(STABLE_RELEASE_API)
                             .header("Accept", GITHUB_JSON)
                             .cacheControl(CacheControl.FORCE_NETWORK)
                             .build()
@@ -109,12 +106,7 @@ class UpdateRepository
                     }
                 }
             val parsed = parseGitHubRelease(body)
-            val release =
-                if (isNightly) {
-                    parsed.toNightlyReleaseIfNewer(BuildConfig.NIGHTLY_RUN)
-                } else {
-                    parsed.toAppReleaseIfNewer(BuildConfig.VERSION_NAME, Build.SUPPORTED_ABIS.toList())
-                }
+            val release = parsed.toAppReleaseIfNewer(BuildConfig.VERSION_NAME, Build.SUPPORTED_ABIS.toList())
             dataManager.setLastUpdateCheck(System.currentTimeMillis())
             _latest.value = release
             return release

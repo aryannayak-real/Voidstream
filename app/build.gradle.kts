@@ -1,4 +1,3 @@
-import com.android.build.api.variant.BuildConfigField
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -60,11 +59,13 @@ android {
         versionCode = 19
         versionName = "3.0.0"
 
-        buildConfigField("int", "NIGHTLY_RUN", "0")
         buildConfigField("String", "APP_LANGUAGE_TAGS", "\"${(listOf("en") + translatedLocaleTags()).joinToString(",")}\"")
         // Last.fm keys come from the CI secrets; builds without them ask the viewer for their own key.
         buildConfigField("String", "LASTFM_API_KEY", "\"${secretValue("lastfmApiKey", "lastfm.apiKey", "LASTFM_API_KEY")}\"")
         buildConfigField("String", "LASTFM_API_SECRET", "\"${secretValue("lastfmApiSecret", "lastfm.apiSecret", "LASTFM_API_SECRET")}\"")
+
+        buildConfigField("Boolean", "UPDATER_ENABLED", "true")
+        buildConfigField("String", "DISCORD_APPLICATION_ID", "\"1526515771021328514\"")
 
         testInstrumentationRunner = "com.voidstream.app.HiltTestRunner"
         vectorDrawables {
@@ -74,36 +75,6 @@ android {
         // Support all architectures for maximum device compatibility
         ndk {
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
-        }
-    }
-
-    dependenciesInfo {
-        // Disables dependency metadata when building APKs (for IzzyOnDroid/F-Droid)
-        includeInApk = false
-        // Disables dependency metadata when building Android App Bundles (for Google Play)
-        includeInBundle = false
-    }
-
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            isUniversalApk = true
-        }
-    }
-
-    flavorDimensions += "version"
-    productFlavors {
-        create("github") {
-            dimension = "version"
-            isDefault = true
-            buildConfigField("Boolean", "UPDATER_ENABLED", "true")
-            buildConfigField("String", "DISCORD_APPLICATION_ID", "\"1526515771021328514\"")
-        }
-        create("foss") {
-            dimension = "version"
-            buildConfigField("Boolean", "UPDATER_ENABLED", "false")
         }
     }
 
@@ -132,13 +103,7 @@ android {
                 ?: System.getenv("KEY_PASSWORD")
                 ?: ""
         }
-        // One long-lived key for every nightly, so each build installs over the last one.
-        create("nightly") {
-            storeFile = rootDir.resolve("nightly.keystore")
-            storePassword = System.getenv("NIGHTLY_STORE_PASSWORD") ?: localProperties.getProperty("nightlyStorePassword") ?: ""
-            keyAlias = System.getenv("NIGHTLY_KEY_ALIAS") ?: localProperties.getProperty("nightlyKeyAlias") ?: ""
-            keyPassword = System.getenv("NIGHTLY_KEY_PASSWORD") ?: localProperties.getProperty("nightlyKeyPassword") ?: ""
-        }
+
     }
 
     buildTypes {
@@ -170,21 +135,11 @@ android {
                 signingConfig = signingConfigs.getByName("release")
                 println("Using RELEASE signing config with keystore: ${releaseKeystore.absolutePath}")
             } else {
-                signingConfig = null // Let Gradle build an unsigned APK for IzzyOnDroid/F-Droid
+                signingConfig = null // Allow unsigned builds when no release keystore is configured
                 println("WARNING: Release keystore not found. Building UNSIGNED release APK.")
             }
         }
-        // Nightly: release-level performance under its own app id. It must come after release,
-        // because initWith copies release as it stands at this point.
-        create("nightly") {
-            initWith(getByName("release"))
-            applicationIdSuffix = ".nightly"
-            versionNameSuffix = "-nightly"
-            matchingFallbacks += "release"
-            buildConfigField("String", "UPDATE_CHANNEL", "\"nightly\"")
-            val nightlyKey = signingConfigs.getByName("nightly")
-            signingConfig = if (nightlyKey.storeFile?.exists() == true) nightlyKey else signingConfigs.getByName("debug")
-        }
+
     }
 
     sourceSets {
@@ -233,38 +188,7 @@ tasks.withType<Test>().configureEach {
     for (name in listOf("flow.fuzz.cases", "flow.fuzz.seed")) providers.systemProperty(name).orNull?.let { systemProperty(name, it) }
 }
 
-// One profile for every shipped variant: foss, nightly and github run the same startup code, and
-// a per-variant profile left foss and nightly with library profiles only (#1301).
-baselineProfile {
-    mergeIntoMain = true
-}
 
-// CI nightlies are numbered by workflow run: versionCode = run, versionName = <next>-nightly.<run>+<sha>.
-// Local nightly builds keep defaultConfig's version, so they never replace a CI nightly.
-androidComponents {
-    onVariants(selector().withBuildType("nightly")) { variant ->
-        val run = providers.environmentVariable("GITHUB_RUN_NUMBER").map(String::toInt)
-        val sha = providers.environmentVariable("GITHUB_SHA").map { it.take(7) }
-        val base = providers.gradleProperty("flow.nightlyBaseVersion")
-        variant.outputs.forEach { output ->
-            val localCode = output.versionCode.get()
-            val localName = output.versionName.get()
-            output.versionCode.set(run.orElse(localCode))
-            output.versionName.set(
-                base
-                    .zip(run) { name, number -> "$name-nightly.$number" }
-                    .zip(sha) { name, commit -> "$name+$commit" }
-                    .orElse(localName),
-            )
-        }
-        variant.buildConfigFields?.put(
-            "NIGHTLY_RUN",
-            run
-                .map { BuildConfigField("int", it.toString(), null) }
-                .orElse(BuildConfigField("int", "0", null)),
-        )
-    }
-}
 
 room {
     schemaDirectory("$projectDir/schemas")
