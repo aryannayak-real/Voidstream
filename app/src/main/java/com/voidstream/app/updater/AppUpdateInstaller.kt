@@ -17,10 +17,10 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.workDataOf
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.voidstream.app.data.update.AppRelease
 import com.voidstream.app.data.update.UpdateDownload
 import com.voidstream.app.data.update.UpdateFailure
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

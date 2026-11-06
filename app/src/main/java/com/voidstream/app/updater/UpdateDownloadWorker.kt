@@ -12,12 +12,12 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import dagger.hilt.android.EntryPointAccessors
 import com.voidstream.app.MainActivity
 import com.voidstream.app.R
 import com.voidstream.app.data.update.UpdateEntryPoint
 import com.voidstream.app.data.update.UpdateFailure
 import com.voidstream.app.notification.NotificationHelper
+import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
