@@ -7,7 +7,6 @@ import java.time.Instant
 
 private val ReleaseJson = Json { ignoreUnknownKeys = true }
 private const val SHA256_PREFIX = "sha256:"
-private const val SHA256_PREFIX = "sha256:"
 
 @Serializable
 internal data class GitHubRelease(
