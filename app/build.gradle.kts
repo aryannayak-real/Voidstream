@@ -103,7 +103,6 @@ android {
                 ?: System.getenv("KEY_PASSWORD")
                 ?: ""
         }
-
     }
 
     buildTypes {
@@ -139,7 +138,6 @@ android {
                 println("WARNING: Release keystore not found. Building UNSIGNED release APK.")
             }
         }
-
     }
 
     sourceSets {
@@ -187,7 +185,6 @@ tasks.withType<Test>().configureEach {
     // `-Dflow.fuzz.cases=N` and `-Dflow.fuzz.seed=S` reach the property tests.
     for (name in listOf("flow.fuzz.cases", "flow.fuzz.seed")) providers.systemProperty(name).orNull?.let { systemProperty(name, it) }
 }
-
 
 
 room {
