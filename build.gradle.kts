@@ -21,6 +21,7 @@ plugins {
 }
 
 spotless {
+    ratchetFrom("HEAD~1")
     // Adopt formatting incrementally from the main commit that introduced linting.
     lineEndings = LineEnding.UNIX
 
