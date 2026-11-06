@@ -25,7 +25,7 @@ import java.io.OutputStream
 
 /**
  * Whole-brain persistence: one typed-DataStore JSON document, mirroring the
- * NeuroStorage pattern. Conversions are top-level and Context-free so an
+ * video-brain storage pattern. Conversions are top-level and Context-free so an
  * offline diagnostic can parse an exported brain without Android.
  */
 internal class MusicBrainStorage(

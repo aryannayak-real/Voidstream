@@ -51,7 +51,7 @@ class StoreScopeGuardTest {
     private val sources: Map<String, String> by lazy {
         FLAVORS
             .flatMap { flavor ->
-                val root = File("src/$flavor/java/$PACKAGE_PATH")
+                val root = File(if (File("app").isDirectory) "app/src/$flavor/java/$PACKAGE_PATH" else "src/$flavor/java/$PACKAGE_PATH")
                 root
                     .walkTopDown()
                     .filter { it.isFile && it.extension == "kt" }
@@ -331,8 +331,8 @@ class StoreScopeGuardTest {
             .joinToString("\n") { it.replace(TRAILING_COMMENT, "") }
 
     private companion object {
-        val FLAVORS = listOf("main", "github", "foss")
-        const val PACKAGE_PATH = "io/github/aedev/flow"
+        val FLAVORS = listOf("main")
+        const val PACKAGE_PATH = "com/voidstream/app"
         const val APP_DATABASE = "main:data/local/AppDatabase.kt"
         const val DATABASE_MODULE = "main:di/DatabaseModule.kt"
         val DAO_PROVIDER = Regex("""fun\s+provide\w+Dao\(\s*@(\w+)\s+database:\s*AppDatabase\s*,?\s*\)\s*:\s*([\w.]+)""")

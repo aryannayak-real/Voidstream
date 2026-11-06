@@ -9,7 +9,7 @@ class SponsorBlockCategoriesTest {
     /** A category with no key of its own falls through to Sponsor's and would overwrite it. */
     @Test
     fun `every category has its own action and colour key`() {
-        val preferences = File("src/main/java/io/github/aedev/flow/data/local/PlayerPreferences.kt").readText()
+        val preferences = File("src/main/java/com/voidstream/app/data/local/PlayerPreferences.kt").readText()
 
         SponsorBlockCategories.all.forEach { category ->
             assertThat(preferences).contains("\"sb_action_$category\"")

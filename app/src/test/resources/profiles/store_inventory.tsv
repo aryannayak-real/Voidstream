@@ -18,7 +18,7 @@ prefs_datastore	flow_recap_images	main:data/stats/RecapImageResolver.kt	PROFILE	
 prefs_datastore	video_queue	main:data/video/VideoQueueStore.kt	PROFILE	private	The queue the person left.
 prefs_datastore	music_queue	main:data/local/QueuePersistence.kt	PROFILE	private	The queue the person left.
 prefs_datastore	scrobbling	main:data/scrobble/ScrobbleStore.kt	PROFILE	private	Personal Last.fm and ListenBrainz accounts and pending scrobbles.
-prefs_datastore	discord_presence	github:discord/DiscordPreferences.kt	PROFILE	private	A personal Discord link.
+prefs_datastore	discord_presence	main:discord/DiscordPreferences.kt	PROFILE	private	A personal Discord link.
 prefs_datastore	sync_identity	main:sync/identity/DeviceIdentity.kt	DEVICE	-	Device id and name.
 prefs_datastore	linked_device	main:sync2/device/DeviceKeys.kt	DEVICE	-	Linked-devices keys, sealed by the Keystore; one roster member per install.
 prefs_datastore	sync_brain_crdt	main:sync/merge/BrainCrdtStore.kt	PROFILE	private	Bound to the profile's brain, which syncs under its own link.
@@ -104,7 +104,7 @@ cache_dir	metrolist_import_*.db	main:data/local/MetrolistImporter.kt	CACHE	-	Tem
 cache_dir	subtitles/	main:data/localmedia/LocalSubtitles.kt	CACHE	-	Subtitles extracted from local files; shared.
 cache_dir	local_covers/	main:data/localmedia/LocalCovers.kt	CACHE	-	Covers extracted from local files; shared.
 cache_dir	exoplayer/, exoplayer_music/	main:player/cache/SharedPlayerCacheProvider.kt	CACHE	-	Media caches; shared (video keyed by expiring URLs, music by video id).
-cache_dir	updates/	github:updater/UpdateDownloadWorker.kt	DEVICE	-	Downloaded APKs.
+cache_dir	updates/	main:updater/UpdateDownloadWorker.kt	DEVICE	-	Downloaded APKs.
 sqlite_file	newpipe_history_*.db, newpipe_playlists_*.db	main:data/local/BackupRepository.kt	CACHE	-	Opens the temporary import copies.
 sqlite_file	metrolist_import_*.db	main:data/local/MetrolistImporter.kt	CACHE	-	Opens the temporary import copy.
 external_files_dir	downloads/ (Media3 download cache)	main:di/DownloadModule.kt	DEVICE	-	Legacy song downloads.
@@ -115,7 +115,7 @@ public_dir	Download/Flow, Movies/Flow, Music/Flow	main:data/video/DownloadRecove
 public_dir	Download/Flow, Movies/Flow, Music/Flow	main:data/video/VideoDownloadManager.kt	DEVICE	-	Finished downloads.
 webview	app_webview/	main:utils/potoken/PoTokenWebView.kt	PROFILE	identity	Attestation session; suffixed per profile on API 28+, cleared at switch on 26-27.
 webview	app_webview/	main:utils/cipher/CipherWebView.kt	PROFILE	identity	Shares the WebView data folder; suffixed per profile on API 28+.
-webview	app_webview/	github:discord/DiscordLoginActivity.kt	PROFILE	identity	Discord login cookies; suffixed per profile on API 28+.
+webview	app_webview/	main:discord/DiscordLoginActivity.kt	PROFILE	identity	Discord login cookies; suffixed per profile on API 28+.
 glance_state	appWidget-<id>	main:widget/playlist/PlaylistWidgetConfig.kt	DEVICE	-	The widget belongs to the launcher; its playlist gets keyed per profile.
 glance_state	appWidget-<id>	main:widget/quickactions/QuickActionsConfig.kt	DEVICE	-	The widget belongs to the launcher.
 factory_datastore	profiles_registry.json	main:data/profile/ProfileRegistry.kt	DEVICE	-	The profiles and which one is active; the one store every profile shares.
@@ -133,7 +133,7 @@ profile_file	flow_blocked_channel_names_v1.json	main:data/recommendation/Blocked
 profile_file	flow_music_brain_v1.json	main:data/recommendation/music/MusicBrainStorage.kt	PROFILE	private	The music brain.
 profile_file	neuro_brain_before_v<N>.json	main:data/recommendation/NeuroStorage.kt	PROFILE	private	Brain copy before a migration; the delete is prefix-wide, so it needs the profile's own folder.
 profile_file	neuro/home_snapshots/	main:data/recommendation/snapshot/HomeSnapshotStore.kt	PROFILE	private	Records that profile's Home.
-profile_file	discord_tokens.enc	github:discord/DiscordTokenStore.kt	PROFILE	private	Personal OAuth tokens; the Keystore alias stays shared.
+profile_file	discord_tokens.enc	main:discord/DiscordTokenStore.kt	PROFILE	private	Personal OAuth tokens; the Keystore alias stays shared.
 profile_file	music_queue	main:data/local/QueuePersistence.kt	PROFILE	private	Checks for a saved queue before the store can be read.
 profile_file	user_neuro_brain.json	main:data/recommendation/NeuroStorage.kt	DEFAULT_ONLY	-	Pre-DataStore brain, migrated for Default only.
 profile_file	flow_neuro_brain_v7.json, v8, v9	main:data/recommendation/NeuroStorage.kt	DEFAULT_ONLY	-	Legacy brains, migrated for Default only.

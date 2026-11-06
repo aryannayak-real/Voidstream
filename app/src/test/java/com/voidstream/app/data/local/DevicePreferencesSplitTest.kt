@@ -11,7 +11,7 @@ import java.io.File
  * key, so the compiler can't catch it; this scan does.
  */
 class DevicePreferencesSplitTest {
-    private val source = File("src/main/java/io/github/aedev/flow/data/local/PlayerPreferences.kt").readText()
+    private val source = File("src/main/java/com/voidstream/app/data/local/PlayerPreferences.kt").readText()
 
     private fun keyNames(objectName: String): List<String> {
         val start = source.indexOf("private object $objectName {")
