@@ -1,0 +1,104 @@
+package com.voidstream.app.ui.screens.player.state
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.voidstream.app.data.model.Comment
+import com.voidstream.app.innertube.pages.VideoCommentSort
+import com.voidstream.app.ui.components.shared.CommentSortFilter
+import com.voidstream.app.ui.components.shared.CommentsTimedFollow
+import com.voidstream.app.ui.components.shared.applyVideoCommentFilters
+import com.voidstream.app.ui.components.shared.timedCommentOrders
+import com.voidstream.app.ui.components.shared.videoCommentSortFor
+import com.voidstream.app.ui.screens.player.VideoPlayerViewModel
+
+/**
+ * Everything the three comment surfaces read: the loaded list, its paging flags, the section's own
+ * total, and the orders it offers.
+ *
+ * Collected once in the host so the bottom sheet, the fullscreen drawer and the supporting pane all
+ * show the same page rather than each collecting their own.
+ */
+@Immutable
+data class PlayerCommentsUiState(
+    val comments: List<Comment> = emptyList(),
+    val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val hasMore: Boolean = false,
+    val totalText: String? = null,
+    val sortOptions: List<VideoCommentSort> = emptyList(),
+)
+
+@Composable
+fun rememberPlayerCommentsUiState(viewModel: VideoPlayerViewModel): PlayerCommentsUiState {
+    val comments by viewModel.commentsState.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoadingComments.collectAsStateWithLifecycle()
+    val isLoadingMore by viewModel.isLoadingMoreComments.collectAsStateWithLifecycle()
+    val hasMore by viewModel.hasMoreComments.collectAsStateWithLifecycle()
+    val totalText by viewModel.commentTotalText.collectAsStateWithLifecycle()
+    val sortOptions by viewModel.commentSortOptions.collectAsStateWithLifecycle()
+    return remember(comments, isLoading, isLoadingMore, hasMore, totalText, sortOptions) {
+        PlayerCommentsUiState(
+            comments = comments,
+            isLoading = isLoading,
+            isLoadingMore = isLoadingMore,
+            hasMore = hasMore,
+            totalText = totalText,
+            sortOptions = sortOptions,
+        )
+    }
+}
+
+/** What the player's comment surfaces give the Timed list to follow the video with. */
+@Composable
+fun rememberPlayerCommentsTimedFollow(
+    viewModel: VideoPlayerViewModel,
+    screenState: PlayerScreenState,
+): CommentsTimedFollow {
+    val enabled by viewModel.timedCommentsFollow.collectAsStateWithLifecycle()
+    val isVisible = screenState.isPlayerExpanded
+    return remember(enabled, isVisible) {
+        CommentsTimedFollow(
+            enabled = enabled,
+            onEnabledChange = viewModel::setTimedCommentsFollow,
+            isSurfaceVisible = isVisible,
+            positionMs = { screenState.currentPosition },
+        )
+    }
+}
+
+/** The rows the selected chip shows, out of the pages loaded so far. */
+@Composable
+fun PlayerCommentsUiState.visibleComments(screenState: PlayerScreenState): List<Comment> {
+    val filter = screenState.commentSortFilter
+    // Only Timed reads the length, so a live stream's growing duration recomposes nothing here.
+    val durationMs = if (filter == CommentSortFilter.TIMED) screenState.duration else 0L
+    return remember(comments, filter, durationMs) {
+        applyVideoCommentFilters(comments, filter, durationMs)
+    }
+}
+
+/**
+ * Applies a chip.
+ *
+ * Top and Newest are separate continuations, so picking one re-requests the section. Oldest reads
+ * the chronological continuation and reverses it locally, which is why it selects the same one as
+ * Newest. Timed reads both.
+ */
+fun PlayerCommentsUiState.selectCommentSort(
+    filter: CommentSortFilter,
+    videoId: String,
+    screenState: PlayerScreenState,
+    viewModel: VideoPlayerViewModel,
+) {
+    screenState.commentSortFilter = filter
+    if (filter == CommentSortFilter.TIMED) {
+        viewModel.selectTimedComments(videoId, timedCommentOrders(sortOptions))
+        return
+    }
+    videoCommentSortFor(sortOptions, filter)?.let { sort ->
+        viewModel.selectCommentSort(videoId, sort)
+    }
+}

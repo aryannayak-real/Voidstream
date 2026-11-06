@@ -1,0 +1,132 @@
+package com.voidstream.app.sync2.store
+
+import com.voidstream.app.sync.crypto.SyncBytes
+import com.voidstream.app.sync2.roster.Entry
+import com.voidstream.app.sync2.roster.entryHash
+
+/**
+ * The store a session works on: what this device holds, with the group's shared store, when it has
+ * one: a Flow server, or files through [FileLayout]. Objects reach it through [upload].
+ */
+class GroupStore(
+    val local: LocalStore,
+    val server: Remote?,
+) : ChangeList {
+    override suspend fun rosterAfter(after: Long): List<Entry> = local.rosterAfter(after)
+
+    /** What the shared store answers, which decides, or what this device holds when it has none. */
+    override suspend fun rosterView(): List<Entry> {
+        val server = server ?: return local.entries()
+        if (server !is FileLayout) return server.rosterView().also { local.addEntries(it) }
+        server.pullRoster(local)
+        val shown = server.rosterPaths().toSet()
+        return local.entries().filter { StorePaths.roster(it.seq, entryHash(it)) in shown }
+    }
+
+    override val linear: Boolean get() = server?.linear ?: false
+
+    override val heldHere: Boolean get() = server == null
+
+    override fun usePins(pins: Set<String>) {
+        server?.usePins(pins)
+    }
+
+    override suspend fun appendRoster(
+        head: String,
+        entry: Entry,
+        wraps: Map<String, String>,
+        chain: String?,
+    ): Appended {
+        val server = server ?: return local.appendRoster(head, entry, wraps, chain)
+        val appended = server.appendRoster(head, entry, wraps, chain)
+        if (appended == Appended.Done) {
+            local.hold(
+                entry,
+                local.rosterAfter(-1),
+                wraps.mapValues { (_, wrap) ->
+                    SyncBytes.b64urlDecode(wrap)
+                },
+                chain?.let(SyncBytes::b64urlDecode),
+            )
+        }
+        return appended
+    }
+
+    override suspend fun key(
+        epoch: Int,
+        kc: String,
+        name: String,
+    ): ByteArray? = local.key(epoch, kc, name)
+
+    override suspend fun putObject(
+        path: String,
+        bytes: ByteArray,
+    ) = local.putObject(path, bytes)
+
+    override suspend fun getObject(path: String): ByteArray? =
+        local.getObject(path) ?: (server as? FileLayout)?.blob(path)?.also { local.putObject(path, it) }
+
+    // The server first: a delete it refuses leaves the object held, so a later collection tries again.
+    override suspend fun deleteObject(path: String) {
+        server?.deleteObject(path)
+        local.deleteObject(path)
+    }
+
+    override suspend fun changes(cursor: Long): Pair<List<ChangedObject>, Long> = local.changes(cursor)
+
+    /**
+     * Copies what the server holds that this device doesn't: roster entries, this device's wraps and
+     * the chain boxes, and, with [objects], the objects after [cursor]. Returns the next cursor.
+     */
+    suspend fun download(
+        me: String,
+        cursor: Long,
+        objects: Boolean,
+    ): Long {
+        val server = server ?: return cursor
+        if (server is FileLayout) {
+            server.pullRoster(local)
+        } else {
+            local.addEntries(
+                server.rosterAfter(local.rosterAfter(-1).lastOrNull()?.seq ?: -1),
+            )
+        }
+        val resolved = local.resolved()
+        for ((epoch, kc, name) in keyNames(resolved.chain, resolved.standing, me)) {
+            if (local.key(epoch, kc, name) == null) server.key(epoch, kc, name)?.let { local.putKey(epoch, kc, name, it) }
+        }
+        if (!objects) return cursor
+        if (server is FileLayout) {
+            server.pullLogs(local)
+            return cursor
+        }
+        if (server !is ChangeList) return cursor
+        var next = cursor
+        while (true) {
+            val (changed, after) = server.changes(next)
+            for (change in changed.filter { StorePaths.isObject(it.path) }) {
+                if (local.getObject(change.path) == null) server.getObject(change.path)?.let { local.putObject(change.path, it) }
+            }
+            // A cursor that doesn't move would hand out the same page forever.
+            if (changed.isEmpty() || after <= next) return next
+            next = after
+        }
+    }
+
+    /** Sends the server this device's own objects held after [heldCursor]; returns how far it got. */
+    suspend fun upload(
+        me: String,
+        heldCursor: Long,
+    ): Long {
+        val server = server ?: return heldCursor
+        var next = heldCursor
+        while (true) {
+            val (changed, after) = local.changes(next)
+            if (changed.isEmpty()) return next
+            for (change in changed.filter { it.path.startsWith("dev/$me/") }) {
+                local.getObject(change.path)?.let { server.putObject(change.path, it) }
+            }
+            next = after
+        }
+    }
+}
