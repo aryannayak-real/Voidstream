@@ -23,7 +23,7 @@ jobs:
       - name: Prepare Gradle
         run: chmod +x gradlew && mkdir -p ~/.gradle && cp .github/ci-gradle.properties ~/.gradle/gradle.properties
       - name: Decode release key
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name != 'pull_request'
         env:
           KEYSTORE: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -42,6 +42,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: apksigner verify app/build/outputs/apk/release/app-release.apk
       - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
         with:
           name: voidstream-universal-apk
           path: app/build/outputs/apk/release/app-release.apk
